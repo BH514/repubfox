@@ -17,3 +17,23 @@ jobs:
       - run: bun test
       - run: bun export:bundle
       - run: bun export:options
+
+      # icons are generated rather than committed, and ubuntu ships
+      # imagemagick 6, which has no "magick" command and no svg delegate
+      - name: Generate icons
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin imagemagick
+          for size in 16 32 48 128; do
+            rsvg-convert -w "$size" -h "$size" public/repub.svg -o "images/repub_$size.png"
+          done
+          convert images/repub_16.png images/repub_32.png images/repub_48.png images/repub_128.png favicon.ico
+
+      - run: bun export:pack
+      - run: cp repubfox.zip repubfox.xpi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repubfox-xpi
+          path: repubfox.xpi
+          if-no-files-found: error
