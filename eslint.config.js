@@ -50,6 +50,7 @@ export default tseslint.config(
             "offscreen",
             "epub",
             "repub",
+            "rmapi",
             "href",
             "doctype",
             "srcset",
