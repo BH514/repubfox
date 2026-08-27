@@ -16,6 +16,8 @@
     "export:options": "next build",
     "export:pack": "zip -r --filesync repubfox.zip background.js favicon.ico images/*.png manifest.json offscreen.html offscreen.js out mhtml/*.js",
     "export": "bun export:images && bun export:bundle && bun export:options && bun export:pack",
+    "xpi": "bun export:bundle && bun export:options && bun export:pack && cp repubfox.zip repubfox.xpi",
+    "sign": "bun xpi && bun run sign.ts",
     "pack": "bun lint && bun test --coverage && bun export"
   },
   "devDependencies": {

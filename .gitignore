@@ -5,6 +5,7 @@ node_modules
 *.tsbuildinfo
 .eslintcache
 .next
+.DS_Store
 
 # Artifacts #
 #############
@@ -17,6 +18,7 @@ node_modules
 /*.wasm
 /*.xpi
 /out
+/dist
 /scripts
 /target
 /pkg
