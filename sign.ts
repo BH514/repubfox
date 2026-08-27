@@ -40,8 +40,24 @@ writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
 console.log(`Signing ${addonId} v${manifest.version} as unlisted...`);
 
-// node's fetch ignores proxy env vars, and its bundled CA store misses TLS-intercepting corporate roots
+const proxy =
+  process.env["HTTPS_PROXY"] ??
+  process.env["https_proxy"] ??
+  process.env["HTTP_PROXY"] ??
+  process.env["http_proxy"];
+
+// behind a proxy node's fetch ignores the proxy env vars, and its bundled CA
+// store misses TLS-intercepting corporate roots
 const nodeOptions = process.env["NODE_OPTIONS"] ?? "";
+const proxyEnv = proxy
+  ? {
+      NODE_USE_ENV_PROXY: "1",
+      NODE_OPTIONS: nodeOptions.includes("--use-system-ca")
+        ? nodeOptions
+        : `${nodeOptions} --use-system-ca`.trim(),
+    }
+  : {};
+
 const { status } = spawnSync(
   "npx",
   [
@@ -62,10 +78,7 @@ const { status } = spawnSync(
       // credentials go through the environment so they stay out of the process list
       WEB_EXT_API_KEY: apiKey,
       WEB_EXT_API_SECRET: apiSecret,
-      NODE_USE_ENV_PROXY: "1",
-      NODE_OPTIONS: nodeOptions.includes("--use-system-ca")
-        ? nodeOptions
-        : `${nodeOptions} --use-system-ca`.trim(),
+      ...proxyEnv,
     },
   },
 );

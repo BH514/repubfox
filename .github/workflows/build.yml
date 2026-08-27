@@ -3,6 +3,7 @@ name: build
 on:
   - push
   - pull_request
+  - workflow_dispatch
 
 jobs:
   build:
@@ -36,4 +37,32 @@ jobs:
         with:
           name: repubfox-xpi
           path: repubfox.xpi
+          if-no-files-found: error
+
+  # AMO refuses a version it has already seen, so signing runs on a tag or on
+  # demand rather than on every push. Pull requests are excluded so that the
+  # credentials are never exposed to a run built from an untrusted branch.
+  sign:
+    needs: build
+    if: >-
+      (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/'))
+      && vars.FIREFOX_ADDON_ID != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - uses: actions/download-artifact@v4
+        with:
+          name: repubfox-xpi
+      - name: Sign as unlisted
+        env:
+          FIREFOX_ADDON_ID: ${{ vars.FIREFOX_ADDON_ID }}
+          MOZILLA_API_KEY: ${{ secrets.MOZILLA_API_KEY }}
+          MOZILLA_API_SECRET: ${{ secrets.MOZILLA_API_SECRET }}
+        run: bun run sign.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repubfox-signed-xpi
+          path: web-ext-artifacts/*.xpi
           if-no-files-found: error
