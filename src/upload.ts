@@ -1,34 +1,21 @@
-import {
-  remarkable,
-  RemarkableApi,
-  RequestInitLike,
-  ResponseLike,
-} from "rmapi-js/dist";
+import { remarkable } from "rmapi-js";
 import { lock } from "./lock";
 
-/**
- * web workers don't like calling fetch bound to global scope, so we need to
- * wrap the call
- */
-async function wrapper(
-  url: string,
-  init?: RequestInitLike,
-): Promise<ResponseLike> {
-  return await fetch(url, init);
-}
+// rmapi-js declares the api instance type but does not export it
+type Remarkable = Awaited<ReturnType<typeof remarkable>>;
 
 const cacheLock = lock();
 let cachedToken = "";
-let cachedApi: RemarkableApi | undefined;
+let cachedApi: Remarkable | undefined;
 
-async function getApi(deviceToken: string): Promise<RemarkableApi> {
+async function getApi(deviceToken: string): Promise<Remarkable> {
   if (cachedApi !== undefined && cachedToken === deviceToken) {
     return cachedApi;
   } else {
     try {
       await cacheLock.acquire();
       cachedToken = deviceToken;
-      const api = await remarkable(deviceToken, { fetch: wrapper });
+      const api = await remarkable(deviceToken);
       cachedApi = api;
       return api;
     } finally {
@@ -43,5 +30,5 @@ export async function upload(
   deviceToken: string,
 ): Promise<void> {
   const api = await getApi(deviceToken);
-  await api.uploadEpub(title, epub.buffer as ArrayBuffer);
+  await api.uploadEpub(title, epub);
 }

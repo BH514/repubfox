@@ -16,6 +16,7 @@
   "host_permissions": [
     "https://webapp-prod.cloud.remarkable.engineering/",
     "https://internal.cloud.remarkable.com/",
+    "https://eu.tectonic.remarkable.com/",
     "https://storage.googleapis.com/",
     "<all_urls>"
   ],
